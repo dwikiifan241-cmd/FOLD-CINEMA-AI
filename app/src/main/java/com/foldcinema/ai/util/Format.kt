@@ -27,3 +27,10 @@ fun formatSize(bytes: Long): String {
 
 fun formatDate(millis: Long): String =
     SimpleDateFormat("d MMM yyyy", Locale.getDefault()).format(Date(millis))
+
+/** m:ss.d (tenths of a second), used where trim precision matters. */
+fun formatPrecise(ms: Long): String {
+    val t = ms.coerceAtLeast(0L)
+    val totalSeconds = t / 1000
+    return String.format(Locale.US, "%d:%02d.%d", totalSeconds / 60, totalSeconds % 60, (t % 1000) / 100)
+}

@@ -55,11 +55,12 @@ fun SettingsScreen(widthClass: WidthClass, onBack: () -> Unit) {
                 }
                 InfoCard(title = "Application") {
                     InfoRow("Version", versionName)
-                    InfoRow("Stage", "1 · Foundation")
+                    InfoRow("Stage", "2 · Video editor core")
                 }
                 InfoCard(title = "Engine roadmap") {
-                    InfoRow("Playback (Media3 ExoPlayer)", "Planned")
-                    InfoRow("Decode/encode (MediaCodec)", "Planned")
+                    InfoRow("Playback (Media3 ExoPlayer)", "Active")
+                    InfoRow("Multi-clip timeline & editing", "Active")
+                    InfoRow("Export (MediaCodec/MediaMuxer)", "Planned")
                     InfoRow("Color grading (OpenGL ES 3.0)", "Planned")
                     InfoRow("AI Auto Edit", "Planned")
                 }

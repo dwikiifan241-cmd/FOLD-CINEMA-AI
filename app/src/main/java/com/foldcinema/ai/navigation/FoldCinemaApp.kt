@@ -1,25 +1,26 @@
 package com.foldcinema.ai.navigation
 
 import androidx.compose.runtime.Composable
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.foldcinema.ai.data.ProjectViewModel
+import com.foldcinema.ai.FoldCinemaApplication
 import com.foldcinema.ai.ui.adaptive.rememberWidthClass
 import com.foldcinema.ai.ui.dashboard.DashboardScreen
+import com.foldcinema.ai.ui.editor.EditorRoute
 import com.foldcinema.ai.ui.importvideo.ImportVideoScreen
 import com.foldcinema.ai.ui.project.NewProjectScreen
-import com.foldcinema.ai.ui.project.ProjectScreen
 import com.foldcinema.ai.ui.settings.SettingsScreen
 import com.foldcinema.ai.ui.splash.SplashScreen
 
 @Composable
-fun FoldCinemaApp(viewModel: ProjectViewModel = viewModel()) {
+fun FoldCinemaApp() {
     val nav = rememberNavController()
     val widthClass = rememberWidthClass()
+    val repository = (LocalContext.current.applicationContext as FoldCinemaApplication).repository
 
     NavHost(navController = nav, startDestination = Routes.SPLASH) {
 
@@ -36,7 +37,7 @@ fun FoldCinemaApp(viewModel: ProjectViewModel = viewModel()) {
         composable(Routes.DASHBOARD) {
             DashboardScreen(
                 widthClass = widthClass,
-                projects = viewModel.projects,
+                projects = repository.projects,
                 onNewProject = { nav.navigate(Routes.NEW_PROJECT) },
                 onImportVideo = { nav.navigate(Routes.IMPORT_VIDEO) },
                 onSettings = { nav.navigate(Routes.SETTINGS) },
@@ -48,7 +49,7 @@ fun FoldCinemaApp(viewModel: ProjectViewModel = viewModel()) {
             NewProjectScreen(
                 onBack = { nav.popBackStack() },
                 onCreate = { name, resolution, fps ->
-                    val project = viewModel.createProject(name, resolution, fps)
+                    val project = repository.createProject(name, resolution, fps)
                     nav.navigate(Routes.project(project.id)) {
                         popUpTo(Routes.DASHBOARD)
                     }
@@ -59,9 +60,10 @@ fun FoldCinemaApp(viewModel: ProjectViewModel = viewModel()) {
         composable(Routes.IMPORT_VIDEO) {
             ImportVideoScreen(
                 widthClass = widthClass,
+                repository = repository,
                 onBack = { nav.popBackStack() },
-                onCreateProject = { uri, info ->
-                    val project = viewModel.createFromVideo(uri, info)
+                onCreateProject = { assets ->
+                    val project = repository.createProjectFromAssets(assets)
                     nav.navigate(Routes.project(project.id)) {
                         popUpTo(Routes.DASHBOARD)
                     }
@@ -80,15 +82,11 @@ fun FoldCinemaApp(viewModel: ProjectViewModel = viewModel()) {
             route = Routes.PROJECT,
             arguments = listOf(navArgument(Routes.PROJECT_ARG) { type = NavType.StringType })
         ) { entry ->
-            val projectId = entry.arguments?.getString(Routes.PROJECT_ARG)
-            ProjectScreen(
+            EditorRoute(
                 widthClass = widthClass,
-                project = viewModel.find(projectId),
-                onBack = { nav.popBackStack() },
-                onDelete = {
-                    viewModel.delete(projectId)
-                    nav.popBackStack()
-                }
+                projectId = entry.arguments?.getString(Routes.PROJECT_ARG),
+                repository = repository,
+                onBack = { nav.popBackStack() }
             )
         }
     }

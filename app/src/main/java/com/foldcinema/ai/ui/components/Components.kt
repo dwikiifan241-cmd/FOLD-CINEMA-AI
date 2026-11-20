@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -23,8 +24,12 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.Card
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CheckboxDefaults
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -48,16 +53,20 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.foldcinema.ai.data.MediaAsset
 import com.foldcinema.ai.data.Project
 import com.foldcinema.ai.ui.adaptive.WidthClass
 import com.foldcinema.ai.ui.theme.Amber
 import com.foldcinema.ai.ui.theme.CinemaBlack
 import com.foldcinema.ai.ui.theme.CinemaDeep
+import com.foldcinema.ai.ui.theme.ErrorRed
 import com.foldcinema.ai.ui.theme.SurfaceHigh
 import com.foldcinema.ai.ui.theme.Teal
 import com.foldcinema.ai.ui.theme.TextMuted
 import com.foldcinema.ai.ui.theme.TextPrimary
 import com.foldcinema.ai.util.formatDate
+import com.foldcinema.ai.util.formatDuration
+import com.foldcinema.ai.util.formatSize
 
 @Composable
 fun CinemaBackground(modifier: Modifier = Modifier, content: @Composable BoxScope.() -> Unit) {
@@ -96,7 +105,12 @@ fun BrandWordmark(modifier: Modifier = Modifier, fontSize: TextUnit = 20.sp) {
 }
 
 @Composable
-fun CinemaTopBar(title: String, onBack: (() -> Unit)?, modifier: Modifier = Modifier) {
+fun CinemaTopBar(
+    title: String,
+    onBack: (() -> Unit)?,
+    modifier: Modifier = Modifier,
+    actions: @Composable RowScope.() -> Unit = {}
+) {
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -119,8 +133,10 @@ fun CinemaTopBar(title: String, onBack: (() -> Unit)?, modifier: Modifier = Modi
             style = MaterialTheme.typography.titleLarge,
             color = TextPrimary,
             maxLines = 1,
-            overflow = TextOverflow.Ellipsis
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.weight(1f)
         )
+        actions()
     }
 }
 
@@ -252,8 +268,15 @@ fun ProjectCard(project: Project, onClick: () -> Unit, modifier: Modifier = Modi
                     style = MaterialTheme.typography.bodySmall,
                     color = TextMuted
                 )
+                val clipCount = project.clips.size
                 Text(
-                    text = formatDate(project.createdAt),
+                    text = (if (clipCount == 1) "1 clip" else "$clipCount clips") +
+                        " · " + formatDuration(project.durationMs),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = TextMuted
+                )
+                Text(
+                    text = formatDate(project.updatedAt),
                     style = MaterialTheme.typography.bodySmall,
                     color = TextMuted
                 )
@@ -381,6 +404,92 @@ fun AdaptiveTwoPane(
                     .verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) { second() }
+        }
+    }
+}
+
+/** Library entry with a selection checkbox and an optional remove button. */
+@Composable
+fun AssetRow(
+    asset: MediaAsset,
+    checked: Boolean,
+    onToggle: () -> Unit,
+    modifier: Modifier = Modifier,
+    onRemove: (() -> Unit)? = null
+) {
+    Card(
+        onClick = onToggle,
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(14.dp),
+        colors = CardDefaults.cardColors(containerColor = SurfaceHigh, contentColor = TextPrimary)
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Checkbox(
+                checked = checked,
+                onCheckedChange = { onToggle() },
+                colors = CheckboxDefaults.colors(checkedColor = Amber, checkmarkColor = CinemaBlack)
+            )
+            Column(Modifier.weight(1f)) {
+                Text(
+                    text = asset.displayName,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = TextPrimary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                val size = asset.sizeBytes?.let { " · " + formatSize(it) } ?: ""
+                Text(
+                    text = formatDuration(asset.durationMs) + " · " + asset.width + "×" + asset.height + size,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = TextMuted
+                )
+            }
+            if (onRemove != null) {
+                IconButton(onClick = onRemove) {
+                    Icon(Icons.Default.Delete, contentDescription = "Remove from library", tint = TextMuted)
+                }
+            }
+        }
+    }
+}
+
+/** Inline message bar. Errors are tinted red; [onDismiss] adds an OK button. */
+@Composable
+fun Banner(
+    text: String,
+    isError: Boolean,
+    modifier: Modifier = Modifier,
+    actionLabel: String? = null,
+    onAction: (() -> Unit)? = null,
+    onDismiss: (() -> Unit)? = null
+) {
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = if (isError) ErrorRed.copy(alpha = 0.18f) else SurfaceHigh,
+            contentColor = TextPrimary
+        )
+    ) {
+        Row(
+            modifier = Modifier.padding(start = 12.dp, end = 4.dp, top = 2.dp, bottom = 2.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = text,
+                style = MaterialTheme.typography.bodySmall,
+                color = TextPrimary,
+                modifier = Modifier.weight(1f).padding(vertical = 6.dp)
+            )
+            if (actionLabel != null && onAction != null) {
+                TextButton(onClick = onAction) { Text(actionLabel) }
+            }
+            if (onDismiss != null) {
+                TextButton(onClick = onDismiss) { Text("OK") }
+            }
         }
     }
 }
