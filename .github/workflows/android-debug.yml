@@ -30,15 +30,13 @@ jobs:
           yes | sudo ${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager --licenses
           ${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager "platform-tools" "platforms;android-35" "build-tools;35.0.0"
 
-     
       - name: Prepare Android debug keystore directory
         run: |
-          mkdir -p "$HOME/.config/.android"
-          chmod -R u+rwX "$HOME/.config/.android"
+          mkdir -p "$RUNNER_TEMP/android-home"
+          echo "ANDROID_USER_HOME=$RUNNER_TEMP/android-home" >> "$GITHUB_ENV"
 
       - name: Build APK
         run: gradle assembleDebug
-
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
