@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Left panel of the folded screen -->
+    <path
+        android:pathData="M53,32 H36 a4,4 0 0 0 -4,4 V72 a4,4 0 0 0 4,4 H53 Z"
+        android:strokeColor="#FFFFB454"
+        android:strokeWidth="3.5"
+        android:strokeLineJoin="round" />
+    <!-- Right panel -->
+    <path
+        android:pathData="M55,32 H72 a4,4 0 0 1 4,4 V72 a4,4 0 0 1 -4,4 H55 Z"
+        android:strokeColor="#FF3DD6C6"
+        android:strokeWidth="3.5"
+        android:strokeLineJoin="round" />
+    <!-- Play mark across the hinge -->
+    <path
+        android:fillColor="#FFECEDF1"
+        android:pathData="M47,44 L64,54 L47,64 Z" />
+</vector>
